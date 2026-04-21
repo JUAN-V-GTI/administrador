@@ -1,0 +1,25 @@
+{
+  "apiKeys": {
+    "newsapi": ""
+  },
+  "mensajesPersonalizados": {
+    "bienvenida": "Buenos días. Tu asistente está listo.",
+    "tareasTarde": "Recuerda revisar tus pendientes de hoy.",
+    "finDia": "Que descanses, fue un buen día de trabajo."
+  },
+  "appsHabilitadas": [
+    "docker",
+    "vscode",
+    "obsidian",
+    "warp"
+  ],
+  "voz": {
+    "velocidad": 150,
+    "volumen": 0.9,
+    "idioma": "es"
+  },
+  "recordatorios": {
+    "rutaObsidian": "",
+    "recordarAlInicio": true
+  }
+}

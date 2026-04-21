@@ -1,0 +1,16 @@
+# python/requirements.txt
+# Dependencias Python para VoxAssistant
+
+# Text-to-Speech offline (sin internet)
+pyttsx3>=2.90
+
+# Reconocimiento de voz
+SpeechRecognition>=3.10.0
+
+# Audio para micrófono (necesario para SpeechRecognition)
+# En Windows: pip install pyaudio
+# En macOS: brew install portaudio && pip install pyaudio
+pyaudio>=0.2.13
+
+# Opcional: si quieres reconocimiento offline sin internet
+# pocketsphinx>=0.1.15

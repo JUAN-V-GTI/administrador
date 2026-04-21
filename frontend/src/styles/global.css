@@ -1,0 +1,80 @@
+/* frontend/src/styles/global.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-widget: rgba(10, 12, 20, 0.92);
+  --bg-modal: rgba(14, 16, 28, 0.97);
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-input: rgba(255, 255, 255, 0.07);
+
+  --accent-cyan: #00f5d4;
+  --accent-purple: #7c3aed;
+  --accent-pink: #f472b6;
+  --accent-yellow: #fbbf24;
+
+  --text-primary: #f0f4ff;
+  --text-secondary: #8892aa;
+  --text-muted: #4a5568;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(0, 245, 212, 0.3);
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 245, 212, 0.05);
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-cyan);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+/* Animaciones globales */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 245, 212, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(0, 245, 212, 0.5); }
+}
+
+@keyframes wave-bounce {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

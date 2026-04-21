@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+frontend/node_modules/
+
+# Builds
+frontend/build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+python/venv/
+python/.venv/
+
+# Config con datos sensibles (si tienes API keys)
+# config/config.json   <- descomenta si NO quieres subir tu config
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Electron
+.electron-gyp/
