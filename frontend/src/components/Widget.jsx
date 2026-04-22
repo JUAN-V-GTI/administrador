@@ -1,7 +1,34 @@
 // frontend/src/components/Widget.jsx
 // Widget flotante con animación de ondas y controles principales
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
+
+function IconButton({ title, onClick, active = false, children }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        border: `1px solid ${active ? 'rgba(34,211,238,0.45)' : 'rgba(148,163,184,0.25)'}`,
+        background: active ? 'rgba(34,211,238,0.14)' : 'rgba(15,23,42,0.72)',
+        color: active ? '#67e8f9' : '#cbd5e1',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 11,
+        fontFamily: 'Space Mono, monospace',
+        transition: 'all 0.2s ease',
+        WebkitAppRegion: 'no-drag',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 // Animación de ondas usando Canvas
 function WaveCanvas({ isSpeaking, isRecording, width = 380, height = 52 }) {
@@ -61,49 +88,33 @@ function WaveCanvas({ isSpeaking, isRecording, width = 380, height = 52 }) {
   );
 }
 
+const DRAG_ZONE = {
+  WebkitAppRegion: 'drag',
+  cursor: 'grab',
+};
+
+const NO_DRAG = {
+  WebkitAppRegion: 'no-drag',
+};
+
 export default function Widget({ isSpeaking, isRecording, onOpenModal, onVoiceRecord, notification, lastCommand, api }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-
-  const handleMouseDown = (e) => {
-    if (e.target.closest('button')) return;
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    const deltaX = e.clientX - dragStart.current.x;
-    const deltaY = e.clientY - dragStart.current.y;
-    dragStart.current = { x: e.clientX, y: e.clientY };
-    if (window.electronAPI) {
-      window.electronAPI.dragWindow?.({ deltaX, deltaY });
-    }
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
-
   return (
     <div
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       style={{
         width: '100%',
         height: '100%',
-        background: 'rgba(10, 12, 20, 0.92)',
+        background: 'linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.95) 100%)',
         backdropFilter: 'blur(20px)',
         borderRadius: '18px',
-        border: '1px solid rgba(0, 245, 212, 0.15)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0,245,212,0.05)',
+        border: '1px solid rgba(148,163,184,0.22)',
+        boxShadow: '0 14px 40px rgba(2,6,23,0.7)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        cursor: isDragging ? 'grabbing' : 'grab',
         position: 'relative',
       }}
     >
-      {/* Barra superior: nombre + botones */}
+      {/* Barra superior: arrastre nativo (Electron) en la zona del título; botones excluidos */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -111,88 +122,58 @@ export default function Widget({ isSpeaking, isRecording, onOpenModal, onVoiceRe
         padding: '8px 14px 4px',
         flexShrink: 0,
       }}>
-        {/* Logo / nombre */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Logo / nombre — zona de arrastre */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, ...DRAG_ZONE }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%',
-            background: isSpeaking ? '#00f5d4' : isRecording ? '#f472b6' : '#4a5568',
-            boxShadow: isSpeaking ? '0 0 8px #00f5d4' : isRecording ? '0 0 8px #f472b6' : 'none',
+            background: isSpeaking ? '#22d3ee' : isRecording ? '#a78bfa' : '#64748b',
+            boxShadow: isSpeaking ? '0 0 10px rgba(34,211,238,0.9)' : isRecording ? '0 0 10px rgba(167,139,250,0.8)' : 'none',
             transition: 'all 0.3s',
           }} />
           <span style={{
             fontFamily: 'Space Mono, monospace',
             fontSize: 11,
-            color: '#8892aa',
+            color: '#94a3b8',
             letterSpacing: '0.08em',
           }}>
             VOX<span style={{ color: '#00f5d4' }}>_</span>ASSISTANT
           </span>
         </div>
 
-        {/* Botones de control */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          {/* Micrófono */}
-          <button
-            onClick={onVoiceRecord}
-            title={isRecording ? 'Detener grabación' : 'Comando de voz'}
-            style={{
-              width: 28, height: 28,
-              borderRadius: 8,
-              border: `1px solid ${isRecording ? 'rgba(244,114,182,0.5)' : 'rgba(255,255,255,0.08)'}`,
-              background: isRecording ? 'rgba(244,114,182,0.15)' : 'rgba(255,255,255,0.04)',
-              color: isRecording ? '#f472b6' : '#8892aa',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13,
-              transition: 'all 0.2s',
-              animation: isRecording ? 'pulse-glow 1s infinite' : 'none',
-            }}
-          >
-            🎤
-          </button>
+        {/* Botones: no-drag para que sigan respondiendo al clic */}
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, ...NO_DRAG }}>
+          <IconButton onClick={onVoiceRecord} title={isRecording ? 'Detener grabación' : 'Comando de voz'} active={isRecording}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M5 10.5a7 7 0 0 0 14 0" />
+              <path d="M12 18.5v3" />
+            </svg>
+          </IconButton>
 
-          {/* Configuración */}
-          <button
-            onClick={onOpenModal}
-            title="Configuración"
-            style={{
-              width: 28, height: 28,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.04)',
-              color: '#8892aa',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13,
-              transition: 'all 0.2s',
-            }}
-          >
-            ⚙️
-          </button>
+          <IconButton onClick={onOpenModal} title="Configuración">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.4V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.4 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.4-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.4-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.4V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.4h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.4 1H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z" />
+            </svg>
+          </IconButton>
 
-          {/* Cerrar */}
-          <button
-            onClick={() => { if (window.electronAPI?.closeApp) window.electronAPI.closeApp(); }}
-            title="Cerrar"
-            style={{
-              width: 28, height: 28,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.04)',
-              color: '#8892aa',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11,
-              transition: 'all 0.2s',
-            }}
-          >
-            ✕
-          </button>
+          <IconButton onClick={() => window.electronAPI?.minimizeWindow?.()} title="Minimizar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </IconButton>
+
+          <IconButton onClick={() => { if (window.electronAPI?.closeApp) window.electronAPI.closeApp(); }} title="Cerrar">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="6" y1="18" x2="18" y2="6" />
+            </svg>
+          </IconButton>
         </div>
       </div>
 
-      {/* Ondas */}
-      <div style={{ padding: '0 14px', flexShrink: 0 }}>
+      {/* Ondas — también arrastrable (cursor suele salir del borde; drag nativo lo sigue bien) */}
+      <div style={{ padding: '0 14px', flexShrink: 0, ...DRAG_ZONE }}>
         <WaveCanvas isSpeaking={isSpeaking} isRecording={isRecording} width={388} height={48} />
       </div>
 
@@ -208,6 +189,7 @@ export default function Widget({ isSpeaking, isRecording, onOpenModal, onVoiceRe
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          ...DRAG_ZONE,
         }}>
           ▶ {notification.text}
         </div>

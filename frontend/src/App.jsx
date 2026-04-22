@@ -1,5 +1,5 @@
 // frontend/src/App.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Widget from './components/Widget';
 import Modal from './components/Modal';
 
@@ -28,6 +28,10 @@ const api = window.electronAPI || {
   stopRecording: async () => ({ success: true, text: 'abrir vscode' }),
   expandWindow: async () => {},
   collapseWindow: async () => {},
+  dragWindow: async () => {},
+  minimizeWindow: async () => {},
+  selectStartupMusic: async () => ({ canceled: true }),
+  pathToFileUrl: async () => '',
   on: (ch, cb) => {},
   off: (ch, cb) => {},
 };
@@ -38,6 +42,9 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
   const [notification, setNotification] = useState(null);
+  const [customApps, setCustomApps] = useState([]);
+  const [startupMusic, setStartupMusic] = useState(null);
+  const startupAudioRef = useRef(null);
 
   // Abrir/cerrar modal + redimensionar ventana
   const handleOpenModal = useCallback(async () => {
@@ -99,6 +106,23 @@ export default function App() {
       }
     }
 
+    // Abrir apps personalizadas por alias o nombre
+    const wantsWeb = cmd.includes('web');
+    const wantsApp = cmd.includes('aplicacion') || cmd.includes('aplicación') || cmd.includes('app');
+    for (const app of customApps) {
+      const alias = (app.alias || '').toLowerCase().trim();
+      const name = (app.name || '').toLowerCase().trim();
+      const targetType = app.targetType || (String(app.target || app.url || '').startsWith('http') ? 'web' : 'app');
+      if (wantsWeb && targetType !== 'web') continue;
+      if (wantsApp && targetType !== 'app') continue;
+      if ((alias && cmd.includes(alias)) || (name && cmd.includes(name))) {
+        const target = app.target || app.url || app.key;
+        const result = await api.openApp(target);
+        await speak(result.success ? `Abriendo ${app.name}` : `No pude abrir ${app.name}`);
+        return;
+      }
+    }
+
     // Configuración
     if (cmd.includes('configur') || cmd.includes('ajuste')) {
       handleOpenModal();
@@ -107,7 +131,7 @@ export default function App() {
     }
 
     await speak(`No entendí el comando: ${command}`);
-  }, [speak, handleOpenModal]);
+  }, [speak, handleOpenModal, customApps]);
 
   // Iniciar grabación de voz
   const handleVoiceRecord = useCallback(async () => {
@@ -131,8 +155,46 @@ export default function App() {
     }
   }, [isRecording, processVoiceCommand]);
 
+  useEffect(() => {
+    let mounted = true;
+    api.getConfig().then((cfg) => {
+      if (!mounted) return;
+      setCustomApps(cfg.customApps || []);
+      const sm = cfg.startupMusic && typeof cfg.startupMusic === 'object'
+        ? { path: '', enabled: true, volume: 0.45, ...cfg.startupMusic }
+        : { path: '', enabled: true, volume: 0.45 };
+      setStartupMusic(sm);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!startupMusic || !startupAudioRef.current) return;
+    const el = startupAudioRef.current;
+    if (!startupMusic.path || startupMusic.enabled === false) {
+      el.pause();
+      el.removeAttribute('src');
+      el.load();
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const url = await api.pathToFileUrl(startupMusic.path);
+      if (cancelled || !url || !startupAudioRef.current) return;
+      el.src = url;
+      el.volume = Math.min(1, Math.max(0, startupMusic.volume ?? 0.45));
+      try {
+        await el.play();
+      } catch {
+        /* autoplay o codec: se ignora */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [startupMusic]);
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <audio ref={startupAudioRef} style={{ display: 'none' }} preload="auto" />
       {/* Widget siempre visible */}
       <Widget
         isSpeaking={isSpeaking}
@@ -150,6 +212,8 @@ export default function App() {
           onClose={handleCloseModal}
           speak={speak}
           api={api}
+          onAppsUpdated={setCustomApps}
+          onStartupMusicChange={setStartupMusic}
         />
       )}
     </div>

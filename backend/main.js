@@ -1,8 +1,9 @@
 // backend/main.js
 // Proceso principal de Electron - orquestador de toda la app
 
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 // Importar módulos del backend
@@ -99,6 +100,30 @@ ipcMain.handle('save-config', async (event, newConfig) => {
   return configModule.saveConfig(newConfig);
 });
 
+// Audio: elegir archivo y URL segura para <audio>
+ipcMain.handle('select-startup-music', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender) || mainWindow;
+  const { canceled, filePaths } = await dialog.showOpenDialog(win || undefined, {
+    title: 'Música al iniciar',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Audio', extensions: ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac', 'opus', 'webm'] },
+      { name: 'Todos los archivos', extensions: ['*'] }
+    ]
+  });
+  if (canceled || !filePaths?.[0]) return { canceled: true };
+  return { canceled: false, filePath: filePaths[0] };
+});
+
+ipcMain.handle('path-to-file-url', (event, absolutePath) => {
+  if (!absolutePath || typeof absolutePath !== 'string') return '';
+  try {
+    return pathToFileURL(absolutePath).href;
+  } catch {
+    return '';
+  }
+});
+
 // Control de ventana
 ipcMain.handle('close-app', () => { app.quit(); });
 
@@ -124,16 +149,34 @@ ipcMain.handle('drag-window', async (event, { deltaX, deltaY }) => {
   }
 });
 
+ipcMain.handle('minimize-window', async () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
 // ─── CICLO DE VIDA APP ────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {
+  if (!isDev) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: false
+    });
+  }
+
   createWindow();
 
   // Mensaje de bienvenida al iniciar
   setTimeout(async () => {
+    const config = configModule.getConfig();
     const hora = new Date().getHours();
     let saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
     await voiceModule.speak(`${saludo}. Tu asistente está listo.`);
+
+    // Abrir automáticamente apps configuradas
+    const appsHabilitadas = config.appsHabilitadas || [];
+    for (const appKey of appsHabilitadas) {
+      await appsModule.openApp(appKey);
+    }
 
     // Leer tareas del día al iniciar
     const tareas = await recordatoriosModule.getTodayTasks();

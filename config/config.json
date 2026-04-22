@@ -13,6 +13,15 @@
     "obsidian",
     "warp"
   ],
+  "customApps": [
+    {
+      "key": "custom-n8n",
+      "name": "n8n",
+      "alias": "n8n",
+      "url": "https://www.youtube.com/watch?v=tfYQSvWTA68&list=PLwjjPKgjif66Gaa_euauV1UtwZqBv_O_i",
+      "autoStart": true
+    }
+  ],
   "voz": {
     "velocidad": 150,
     "volumen": 0.9,
@@ -21,5 +30,10 @@
   "recordatorios": {
     "rutaObsidian": "",
     "recordarAlInicio": true
+  },
+  "startupMusic": {
+    "path": "/Users/juanvelazco/Downloads/ytmp3free.cc_system-of-a-down-question-official-hd-video-youtubemp3free.org.mp3",
+    "enabled": true,
+    "volume": 0.45
   }
 }

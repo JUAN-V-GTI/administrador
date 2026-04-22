@@ -25,10 +25,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Config
   getConfig: () => ipcRenderer.invoke('get-config'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
+  selectStartupMusic: () => ipcRenderer.invoke('select-startup-music'),
+  pathToFileUrl: (absolutePath) => ipcRenderer.invoke('path-to-file-url', absolutePath),
 
   // Ventana
   expandWindow: () => ipcRenderer.invoke('expand-window'),
   collapseWindow: () => ipcRenderer.invoke('collapse-window'),
+  dragWindow: (delta) => ipcRenderer.invoke('drag-window', delta),
+  minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
   closeApp: () => ipcRenderer.invoke('close-app'),
 
   // Escuchar eventos del main process hacia React

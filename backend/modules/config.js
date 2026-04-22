@@ -16,6 +16,7 @@ const DEFAULT_CONFIG = {
     finDia: 'Que descanses, fue un buen día.'
   },
   appsHabilitadas: ['docker', 'vscode', 'obsidian', 'warp'],
+  customApps: [],
   voz: {
     velocidad: 150,
     volumen: 0.9,
@@ -24,6 +25,12 @@ const DEFAULT_CONFIG = {
   recordatorios: {
     rutaObsidian: '',  // Se detecta automáticamente si queda vacío
     recordarAlInicio: true
+  },
+  /** Música al abrir la app (ruta absoluta en disco) */
+  startupMusic: {
+    path: '',
+    enabled: true,
+    volume: 0.45
   }
 };
 
